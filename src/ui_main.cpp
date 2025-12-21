@@ -165,13 +165,23 @@ static void style_value_big(lv_obj_t *lbl)
 {
     lv_obj_set_style_text_align(lbl, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_set_style_text_opa(lbl, LV_OPA_100, 0);
+    lv_obj_set_style_text_font(lbl, &lv_font_montserrat_48, 0);
     lv_obj_set_width(lbl, lv_pct(100));
 }
 
 static void style_value_med(lv_obj_t *lbl)
 {
     lv_obj_set_style_text_align(lbl, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_style_text_opa(lbl, LV_OPA_90, 0);
+    lv_obj_set_style_text_opa(lbl, LV_OPA_100, 0);
+    lv_obj_set_style_text_font(lbl, &lv_font_montserrat_32, 0);
+    lv_obj_set_width(lbl, lv_pct(100));
+}
+
+static void style_value_small(lv_obj_t *lbl)
+{
+    lv_obj_set_style_text_align(lbl, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_style_text_opa(lbl, LV_OPA_100, 0);
+    lv_obj_set_style_text_font(lbl, &lv_font_montserrat_24, 0);
     lv_obj_set_width(lbl, lv_pct(100));
 }
 
@@ -330,16 +340,20 @@ static void make_small_gauge_card(
 
     lv_obj_t *psi = lv_label_create(card);
     lv_label_set_text(psi, "0\nPSI");
-    style_value_big(psi);
-    lv_obj_set_style_text_line_space(psi, 3, 0);
-    lv_obj_align(psi, LV_ALIGN_CENTER, 0, -10);
+    // On small cards we must show PSI *and* temperature without overlap.
+    // Use a slightly smaller font than the big cards, but keep it bold/legible.
+    style_value_med(psi);
+    lv_obj_set_style_text_line_space(psi, 2, 0);
+    // Put PSI above center so the temp can live below.
+    lv_obj_align(psi, LV_ALIGN_CENTER, 0, -18);
 
     lv_obj_t *temp = nullptr;
     if(out_temp_optional) {
         temp = lv_label_create(card);
         lv_label_set_text(temp, "0.0 \xC2\xB0""F");
+        // Temperature is secondary to PSI, but still needs to be easy to read.
         style_value_med(temp);
-        lv_obj_align(temp, LV_ALIGN_BOTTOM_MID, 0, -6);
+        lv_obj_align(temp, LV_ALIGN_CENTER, 0, 52);
         *out_temp_optional = temp;
     }
 
@@ -510,52 +524,81 @@ static void make_hose_subcard(
     lv_label_set_text(t, title);
     style_title(t);
 
-    // Status indicator (slightly emphasized)
+    // Status indicator: readable but must not crowd the temperature.
     lv_obj_t *status = lv_label_create(card);
     lv_label_set_text(status, "OFF");
-    style_value_med(status);
+    style_value_small(status);
 
-    // Temp bigger
+    // Main hose temperature (large, but smaller than the pressure cards)
     lv_obj_t *temp = lv_label_create(card);
     lv_label_set_text(temp, "0.0 \xC2\xB0""F");
-    style_value_big(temp);
+    style_value_med(temp);
 
-    // Setpoint
+    // Setpoint line
     lv_obj_t *setp = lv_label_create(card);
     lv_label_set_text(setp, "Set: 0 \xC2\xB0""F");
-    style_value_med(setp);
+    style_value_small(setp);
 
     // Toggle
     lv_obj_t *btn_toggle = lv_btn_create(card);
     noscroll(btn_toggle);
     lv_obj_set_width(btn_toggle, lv_pct(100));
+    lv_obj_set_height(btn_toggle, 42);
     lv_obj_t *lbl_t = lv_label_create(btn_toggle);
     lv_label_set_text(lbl_t, "HEAT: OFF");
+    style_value_small(lbl_t);
     lv_obj_center(lbl_t);
 
     // Up/Down row
-    lv_obj_t *row = lv_obj_create(card);
-    transparent_container(row);
-    lv_obj_set_width(row, lv_pct(100));
-    lv_obj_set_height(row, LV_SIZE_CONTENT);
-    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(row, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_column(row, 8, 0);
+    // TEMP - / TEMP + buttons (pill with rounded outer corners)
+    lv_obj_t *pill = lv_obj_create(card);
+    lv_obj_set_size(pill, lv_pct(92), 42);
+    lv_obj_align(pill, LV_ALIGN_BOTTOM_MID, 0, -2);
+    lv_obj_set_style_pad_all(pill, 0, 0);
+    lv_obj_set_style_pad_gap(pill, 0, 0);
+    lv_obj_set_style_border_width(pill, 0, 0);
+    lv_obj_set_style_radius(pill, 14, 0);
+    lv_obj_set_style_clip_corner(pill, true, 0);
+    lv_obj_set_style_bg_color(pill, lv_palette_main(LV_PALETTE_BLUE), 0);
+    lv_obj_set_style_bg_opa(pill, LV_OPA_100, 0);
 
-    lv_obj_t *btn_up = lv_btn_create(row);
-    noscroll(btn_up);
-    lv_obj_set_size(btn_up, 96, 52);
-    lv_obj_t *lbl_up = lv_label_create(btn_up);
-    lv_label_set_text(lbl_up, "TEMP +");
-    lv_obj_center(lbl_up);
+    lv_obj_set_layout(pill, LV_LAYOUT_FLEX);
+    lv_obj_set_flex_flow(pill, LV_FLEX_FLOW_ROW);
+    lv_obj_set_flex_align(pill, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
-    lv_obj_t *btn_dn = lv_btn_create(row);
-    noscroll(btn_dn);
-    lv_obj_set_size(btn_dn, 96, 52);
+    // TEMP - on the LEFT
+    lv_obj_t *btn_dn = lv_btn_create(pill);
+    lv_obj_set_size(btn_dn, lv_pct(49), lv_pct(100));
+    lv_obj_set_style_radius(btn_dn, 0, 0);
+    lv_obj_set_style_border_width(btn_dn, 0, 0);
+    lv_obj_set_style_shadow_width(btn_dn, 0, 0);
+    lv_obj_set_style_bg_opa(btn_dn, LV_OPA_TRANSP, 0);
     lv_obj_t *lbl_dn = lv_label_create(btn_dn);
     lv_label_set_text(lbl_dn, "TEMP -");
+    lv_obj_set_style_text_color(lbl_dn, lv_color_white(), 0);
     lv_obj_center(lbl_dn);
 
+    // subtle divider (between - and +)
+    lv_obj_t *div = lv_obj_create(pill);
+    lv_obj_set_size(div, 2, lv_pct(80));
+    lv_obj_set_style_bg_color(div, lv_color_white(), 0);
+    lv_obj_set_style_bg_opa(div, LV_OPA_60, 0);
+    lv_obj_set_style_border_width(div, 0, 0);
+    lv_obj_set_style_radius(div, 0, 0);
+    lv_obj_set_style_pad_all(div, 0, 0);
+    lv_obj_clear_flag(div, LV_OBJ_FLAG_SCROLLABLE);
+
+    // TEMP + on the RIGHT
+    lv_obj_t *btn_up = lv_btn_create(pill);
+    lv_obj_set_size(btn_up, lv_pct(49), lv_pct(100));
+    lv_obj_set_style_radius(btn_up, 0, 0);
+    lv_obj_set_style_border_width(btn_up, 0, 0);
+    lv_obj_set_style_shadow_width(btn_up, 0, 0);
+    lv_obj_set_style_bg_opa(btn_up, LV_OPA_TRANSP, 0);
+    lv_obj_t *lbl_up = lv_label_create(btn_up);
+    lv_label_set_text(lbl_up, "TEMP +");
+    lv_obj_set_style_text_color(lbl_up, lv_color_white(), 0);
+    lv_obj_center(lbl_up);
     if(out_status) *out_status = status;
     if(out_temp)   *out_temp   = temp;
     if(out_set)    *out_set    = setp;
