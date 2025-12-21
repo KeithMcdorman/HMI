@@ -212,7 +212,8 @@ static void hose_toggle_button_text(lv_obj_t *btn, bool on)
     if(!btn) return;
     lv_obj_t *lbl = lv_obj_get_child(btn, 0);
     if(!lbl) return;
-    lv_label_set_text(lbl, on ? "HEAT: ON" : "HEAT: OFF");
+    // Keep this concise; the card already says "HOSE X HEAT".
+    lv_label_set_text(lbl, on ? "ON" : "OFF");
 }
 
 // ----------------------------------
@@ -344,8 +345,10 @@ static void make_small_gauge_card(
     // Use a slightly smaller font than the big cards, but keep it bold/legible.
     style_value_med(psi);
     lv_obj_set_style_text_line_space(psi, 2, 0);
-    // Put PSI above center so the temp can live below.
-    lv_obj_align(psi, LV_ALIGN_CENTER, 0, -18);
+    // Center PSI within the arc (not the card) so it sits correctly on ISO/RESIN LOW, GUN AIR, PRIMARY AIR.
+    lv_obj_set_width(psi, 180);
+    lv_obj_set_style_text_align(psi, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_align_to(psi, arc, LV_ALIGN_CENTER, 0, -12);
 
     lv_obj_t *temp = nullptr;
     if(out_temp_optional) {
@@ -353,7 +356,9 @@ static void make_small_gauge_card(
         lv_label_set_text(temp, "0.0 \xC2\xB0""F");
         // Temperature is secondary to PSI, but still needs to be easy to read.
         style_value_med(temp);
-        lv_obj_align(temp, LV_ALIGN_CENTER, 0, 52);
+        lv_obj_set_width(temp, 180);
+        lv_obj_set_style_text_align(temp, LV_TEXT_ALIGN_CENTER, 0);
+        lv_obj_align_to(temp, arc, LV_ALIGN_CENTER, 0, 56);
         *out_temp_optional = temp;
     }
 
@@ -545,15 +550,16 @@ static void make_hose_subcard(
     lv_obj_set_width(btn_toggle, lv_pct(100));
     lv_obj_set_height(btn_toggle, 42);
     lv_obj_t *lbl_t = lv_label_create(btn_toggle);
-    lv_label_set_text(lbl_t, "HEAT: OFF");
+    lv_label_set_text(lbl_t, "OFF");
     style_value_small(lbl_t);
     lv_obj_center(lbl_t);
 
     // Up/Down row
     // TEMP - / TEMP + buttons (pill with rounded outer corners)
     lv_obj_t *pill = lv_obj_create(card);
-    lv_obj_set_size(pill, lv_pct(92), 42);
-    lv_obj_align(pill, LV_ALIGN_BOTTOM_MID, 0, -2);
+    // Let the card's flex column lay this out so it never clips off the bottom.
+    lv_obj_set_size(pill, lv_pct(100), 44);
+    lv_obj_set_style_margin_top(pill, 6, 0);
     lv_obj_set_style_pad_all(pill, 0, 0);
     lv_obj_set_style_pad_gap(pill, 0, 0);
     lv_obj_set_style_border_width(pill, 0, 0);
