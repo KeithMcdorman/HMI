@@ -93,13 +93,13 @@ void setup()
         while (1) delay(1000);
     }
 
-    if (!ledcWrite(LCD_LED, MAX_PWM_VAL >> 4)) {
+    if (!ledcWrite(LCD_LED, MAX_PWM_VAL - 1)) {
         log_e("Error setting ledc value. system halted");
         while (1) delay(1000);
     }
 
     // Create the real UI (replaces Hello World)
-    ui_main_create();
+    ui_build_live_view(lv_scr_act());
 }
 
 void loop()
@@ -107,4 +107,20 @@ void loop()
     lv_timer_handler();
     delay(5);
     lv_tick_inc(5);
+      static float t = 0;
+    t += 0.03f;
+
+    float iso_hp   = 1100 + 120 * sinf(t);
+    float resin_hp = 1080 + 120 * sinf(t + 0.7f);
+    float ratio    = (resin_hp > 1.0f) ? (iso_hp / resin_hp) : 1.0f;
+
+    ui_update_live_values(
+        iso_hp, resin_hp,
+        120, 115,
+        95,  85,
+        74.8f, 71.8f,
+        72.4f, 72.5f,
+        70.5f, 70.1f,
+        ratio
+    );
 }
