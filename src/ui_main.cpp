@@ -524,42 +524,41 @@ static void make_hose_subcard(
 
     lv_obj_set_flex_flow(card, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(card, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    // Keep enough padding so the +/- controls are never clipped.
+    lv_obj_set_style_pad_all(card, 8, 0);
+    lv_obj_set_style_pad_row(card, 6, 0);
 
     lv_obj_t *t = lv_label_create(card);
     lv_label_set_text(t, title);
     style_title(t);
 
-    // Status indicator: readable but must not crowd the temperature.
-    lv_obj_t *status = lv_label_create(card);
-    lv_label_set_text(status, "OFF");
-    style_value_small(status);
+    // NOTE: status line removed; the ON/OFF state is shown on the toggle button.
+    lv_obj_t *status = nullptr;
 
-    // Main hose temperature (large, but smaller than the pressure cards)
+    // Temp bigger
     lv_obj_t *temp = lv_label_create(card);
     lv_label_set_text(temp, "0.0 \xC2\xB0""F");
-    style_value_med(temp);
+    style_value_big(temp);
 
-    // Setpoint line
+    // Setpoint
     lv_obj_t *setp = lv_label_create(card);
     lv_label_set_text(setp, "Set: 0 \xC2\xB0""F");
-    style_value_small(setp);
+    style_value_med(setp);
 
     // Toggle
     lv_obj_t *btn_toggle = lv_btn_create(card);
     noscroll(btn_toggle);
-    lv_obj_set_width(btn_toggle, lv_pct(100));
+    lv_obj_set_width(btn_toggle, lv_pct(92));
     lv_obj_set_height(btn_toggle, 42);
     lv_obj_t *lbl_t = lv_label_create(btn_toggle);
     lv_label_set_text(lbl_t, "OFF");
-    style_value_small(lbl_t);
     lv_obj_center(lbl_t);
 
     // Up/Down row
     // TEMP - / TEMP + buttons (pill with rounded outer corners)
     lv_obj_t *pill = lv_obj_create(card);
-    // Let the card's flex column lay this out so it never clips off the bottom.
-    lv_obj_set_size(pill, lv_pct(100), 44);
-    lv_obj_set_style_margin_top(pill, 6, 0);
+    // Let flex layout place it naturally so it is never clipped.
+    lv_obj_set_size(pill, lv_pct(92), 42);
     lv_obj_set_style_pad_all(pill, 0, 0);
     lv_obj_set_style_pad_gap(pill, 0, 0);
     lv_obj_set_style_border_width(pill, 0, 0);
