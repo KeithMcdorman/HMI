@@ -1,5 +1,7 @@
 #pragma once
 
+// Fixed portrait resolution (this board/driver combo expects 800x1280)
+// Do NOT use LVGL software rotation here.
 #define LCD_H_RES 800
 #define LCD_V_RES 1280
 

@@ -1,15 +1,18 @@
 #pragma once
+
 #include "lvgl.h"
+#include <stdint.h>
 #include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// Build the live-only screen
-void ui_build_live_view(lv_obj_t *root);
+// ---------- Public UI API ----------
+void ui_build_live_view(lv_obj_t * parent);
 
-// Update all live values in one call (matches your main.cpp usage)
+// NOTE: Keep this signature EXACTLY matching what your main.cpp calls.
+// If your main.cpp call differs, adjust this prototype to match main.cpp.
 void ui_update_live_values(
     float iso_hp_psi,      float resin_hp_psi,
     float iso_low_psi,     float resin_low_psi,
@@ -20,12 +23,12 @@ void ui_update_live_values(
     float ratio
 );
 
-// Optional: set banner message and severity (error=true shows red styling)
-void ui_set_banner(const char *msg, bool error);
+// Banner
+void ui_set_banner(const char * msg, bool is_error);
 
-// Optional: callback hook when user toggles hose heat or changes setpoint
-typedef void (*ui_hose_toggle_cb_t)(int hose_index, bool enabled);
-typedef void (*ui_hose_setpoint_cb_t)(int hose_index, int setpoint_f);
+// Hose heat callbacks (UI -> your application logic)
+typedef void (*ui_hose_toggle_cb_t)(uint8_t zone, bool enabled);
+typedef void (*ui_hose_setpoint_cb_t)(uint8_t zone, int setpoint_f);
 
 void ui_set_hose_toggle_callback(ui_hose_toggle_cb_t cb);
 void ui_set_hose_setpoint_callback(ui_hose_setpoint_cb_t cb);

@@ -104,10 +104,18 @@ void setup()
 
 void loop()
 {
-    lv_timer_handler();
-    delay(5);
-    lv_tick_inc(5);
-      static float t = 0;
+    // LVGL tick based on real elapsed time (prevents timing drift / UI jitter)
+    static uint32_t last_ms = 0;
+    const uint32_t now = millis();
+    uint32_t delta = now - last_ms;
+    last_ms = now;
+    if(delta > 0) lv_tick_inc(delta);
+
+    // Let LVGL run; it returns the time until it needs to be called again.
+    const uint32_t wait_ms = lv_timer_handler();
+    delay(wait_ms > 5 ? 5 : wait_ms);
+
+    static float t = 0;
     t += 0.03f;
 
     float iso_hp   = 1100 + 120 * sinf(t);
